@@ -41,7 +41,7 @@ constexpr COLORREF MakeRGB(BYTE r, BYTE g, BYTE b) noexcept {
   return r | (g << 8) | (b << 16);
 }
 
-constexpr auto ComputeShades(COLORREF base, int delta = 40) noexcept {
+constexpr auto ComputeShades(COLORREF base, int delta = 20) noexcept {
   auto clamp = [](int value) -> BYTE {
     return static_cast<BYTE>(value < 0 ? 0 : (value > 255 ? 255 : value));
   };
@@ -65,64 +65,68 @@ struct Button {
   COLORREF darkColor;
   COLORREF lightColor;
   bool isPressed;
+  bool isLightText;
 
   // Constructor that computes dark/light shades from baseColor
   constexpr Button(int id, LPCWSTR text, int x, int y, int width, int height,
-                   COLORREF baseColor)
+                   COLORREF baseColor, bool isLightText)
       : id(id), hWnd(nullptr), text(text), x(x), y(y), width(width),
         height(height), baseColor(baseColor),
         darkColor(ComputeShades(baseColor).first),
-        lightColor(ComputeShades(baseColor).second), isPressed(false) {}
+        lightColor(ComputeShades(baseColor).second), isPressed(false),
+        isLightText(isLightText) {}
 
   // Constructor that uses explicitly provided colors
   constexpr Button(int id, LPCWSTR text, int x, int y, int width, int height,
-                   COLORREF baseColor, COLORREF darkColor, COLORREF lightColor)
+                   COLORREF baseColor, COLORREF darkColor, COLORREF lightColor,
+                   bool isLightText)
       : id(id), hWnd(nullptr), text(text), x(x), y(y), width(width),
         height(height), baseColor(baseColor), darkColor(darkColor),
-        lightColor(lightColor), isPressed(false) {}
+        lightColor(lightColor), isPressed(false), isLightText(isLightText) {}
 };
 
-constexpr COLORREF NUMBER_BASE = MakeRGB(240, 240, 240);
-constexpr COLORREF OPERATOR_BASE = MakeRGB(200, 230, 200);
-constexpr COLORREF SPECIAL_BASE = MakeRGB(180, 200, 240);
+constexpr COLORREF NUMBER_BASE = MakeRGB(36, 36, 40);
+constexpr COLORREF OPERATOR_BASE = MakeRGB(47, 47, 51);
+constexpr COLORREF SPECIAL_BASE = MakeRGB(131, 179, 244);
 
 inline std::unordered_map<int, std::reference_wrapper<Button>> buttonMap;
 
 inline Button buttons[] = {
-    {IDC_BTN_7, L"7", MARGIN, MARGIN, BUTTON_SIZE, BUTTON_SIZE, NUMBER_BASE},
-    {IDC_BTN_8, L"8", MARGIN + BUTTON_SIZE, MARGIN, BUTTON_SIZE, BUTTON_SIZE,
-     NUMBER_BASE},
-    {IDC_BTN_9, L"9", MARGIN + 2 * BUTTON_SIZE, MARGIN, BUTTON_SIZE,
-     BUTTON_SIZE, NUMBER_BASE},
-    {IDC_BTN_P, L"P", MARGIN + 3 * BUTTON_SIZE, MARGIN, BUTTON_SIZE,
-     BUTTON_SIZE, SPECIAL_BASE},
-    {IDC_BTN_4, L"4", MARGIN, MARGIN + BUTTON_SIZE, BUTTON_SIZE, BUTTON_SIZE,
-     NUMBER_BASE},
-    {IDC_BTN_5, L"5", MARGIN + BUTTON_SIZE, MARGIN + BUTTON_SIZE, BUTTON_SIZE,
-     BUTTON_SIZE, NUMBER_BASE},
-    {IDC_BTN_6, L"6", MARGIN + 2 * BUTTON_SIZE, MARGIN + BUTTON_SIZE,
-     BUTTON_SIZE, BUTTON_SIZE, NUMBER_BASE},
-    {IDC_BTN_MINUS, L"-", MARGIN + 3 * BUTTON_SIZE, MARGIN + BUTTON_SIZE,
-     BUTTON_SIZE, BUTTON_SIZE, OPERATOR_BASE},
-    {IDC_BTN_1, L"1", MARGIN, MARGIN + 2 * BUTTON_SIZE, BUTTON_SIZE,
-     BUTTON_SIZE, NUMBER_BASE},
-    {IDC_BTN_2, L"2", MARGIN + BUTTON_SIZE, MARGIN + 2 * BUTTON_SIZE,
-     BUTTON_SIZE, BUTTON_SIZE, NUMBER_BASE},
-    {IDC_BTN_3, L"3", MARGIN + 2 * BUTTON_SIZE, MARGIN + 2 * BUTTON_SIZE,
-     BUTTON_SIZE, BUTTON_SIZE, NUMBER_BASE},
-    {IDC_BTN_PLUS, L"+", MARGIN + 3 * BUTTON_SIZE, MARGIN + 2 * BUTTON_SIZE,
-     BUTTON_SIZE, BUTTON_SIZE, SPECIAL_BASE},
-    {IDC_BTN_0, L"0", MARGIN, MARGIN + 3 * BUTTON_SIZE, BUTTON_SIZE * 2,
-     BUTTON_SIZE, NUMBER_BASE},
-    {IDC_BTN_COMMA, L",", MARGIN + 2 * BUTTON_SIZE, MARGIN + 3 * BUTTON_SIZE,
-     BUTTON_SIZE, BUTTON_SIZE, OPERATOR_BASE},
-    {IDC_BTN_DOT, L".", MARGIN + 3 * BUTTON_SIZE, MARGIN + 3 * BUTTON_SIZE,
-     BUTTON_SIZE, BUTTON_SIZE, OPERATOR_BASE},
-    {IDC_BTN_COPY, L"Ctrl\nC", MARGIN + 4 * BUTTON_SIZE, MARGIN, BUTTON_SIZE,
-     BUTTON_SIZE * 2, SPECIAL_BASE},
-    {IDC_BTN_PASTE, L"Ctrl\nV", MARGIN + 4 * BUTTON_SIZE,
-     BUTTON_SIZE * 2 + MARGIN, BUTTON_SIZE, BUTTON_SIZE * 2, SPECIAL_BASE},
-    {IDC_BTN_BS, L"BS", MARGIN + 5 * BUTTON_SIZE, MARGIN, BUTTON_SIZE,
-     BUTTON_SIZE * 2, SPECIAL_BASE},
-    {IDC_BTN_ENTER, L"Entr", MARGIN + 5 * BUTTON_SIZE, BUTTON_SIZE * 2 + MARGIN,
-     BUTTON_SIZE, BUTTON_SIZE * 2, SPECIAL_BASE}};
+    {IDC_BTN_7, L"7", MARGIN, MARGIN + BUTTON_SIZE, BUTTON_SIZE, BUTTON_SIZE, NUMBER_BASE,
+     true},
+    {IDC_BTN_8, L"8", MARGIN + BUTTON_SIZE, MARGIN + BUTTON_SIZE, BUTTON_SIZE, BUTTON_SIZE,
+     NUMBER_BASE, true},
+    {IDC_BTN_9, L"9", MARGIN + 2 * BUTTON_SIZE, MARGIN + BUTTON_SIZE, BUTTON_SIZE,
+     BUTTON_SIZE, NUMBER_BASE, true},
+    {IDC_BTN_P, L"P", MARGIN + 3 * BUTTON_SIZE, MARGIN + BUTTON_SIZE, BUTTON_SIZE,
+     BUTTON_SIZE, SPECIAL_BASE, false},
+    {IDC_BTN_4, L"4", MARGIN, MARGIN + 2 * BUTTON_SIZE, BUTTON_SIZE, BUTTON_SIZE,
+     NUMBER_BASE, true},
+    {IDC_BTN_5, L"5", MARGIN + BUTTON_SIZE, MARGIN + 2 * BUTTON_SIZE, BUTTON_SIZE,
+     BUTTON_SIZE, NUMBER_BASE, true},
+    {IDC_BTN_6, L"6", MARGIN + 2 * BUTTON_SIZE, MARGIN + 2 * BUTTON_SIZE,
+     BUTTON_SIZE, BUTTON_SIZE, NUMBER_BASE, true},
+    {IDC_BTN_MINUS, L"-", MARGIN + 3 * BUTTON_SIZE, MARGIN +  2 * BUTTON_SIZE,
+     BUTTON_SIZE, BUTTON_SIZE, SPECIAL_BASE, false},
+    {IDC_BTN_1, L"1", MARGIN, MARGIN + 3 * BUTTON_SIZE, BUTTON_SIZE,
+     BUTTON_SIZE, NUMBER_BASE, true},
+    {IDC_BTN_2, L"2", MARGIN + BUTTON_SIZE, MARGIN + 3 * BUTTON_SIZE,
+     BUTTON_SIZE, BUTTON_SIZE, NUMBER_BASE, true},
+    {IDC_BTN_3, L"3", MARGIN + 2 * BUTTON_SIZE, MARGIN + 3 * BUTTON_SIZE,
+     BUTTON_SIZE, BUTTON_SIZE, NUMBER_BASE, true},
+    {IDC_BTN_PLUS, L"+", MARGIN + 3 * BUTTON_SIZE, MARGIN + 3 * BUTTON_SIZE,
+     BUTTON_SIZE, BUTTON_SIZE, SPECIAL_BASE, false},
+    {IDC_BTN_0, L"0", MARGIN, MARGIN + 4 * BUTTON_SIZE, BUTTON_SIZE * 2,
+     BUTTON_SIZE, NUMBER_BASE, true},
+    {IDC_BTN_COMMA, L",", MARGIN + 2 * BUTTON_SIZE, MARGIN + 4 * BUTTON_SIZE,
+     BUTTON_SIZE, BUTTON_SIZE, OPERATOR_BASE, true},
+    {IDC_BTN_DOT, L".", MARGIN + 3 * BUTTON_SIZE, MARGIN + 4 * BUTTON_SIZE,
+     BUTTON_SIZE, BUTTON_SIZE, OPERATOR_BASE, true},
+    {IDC_BTN_COPY, L"Ctrl\nC", MARGIN, MARGIN, BUTTON_SIZE * 2,
+     BUTTON_SIZE, SPECIAL_BASE, false},
+    {IDC_BTN_PASTE, L"Ctrl\nV", MARGIN + 2 * BUTTON_SIZE, MARGIN, BUTTON_SIZE * 2, BUTTON_SIZE, SPECIAL_BASE,
+     false},
+    {IDC_BTN_BS, L"BS", MARGIN + 4 * BUTTON_SIZE, MARGIN, BUTTON_SIZE,
+     BUTTON_SIZE * 3, SPECIAL_BASE, false},
+    {IDC_BTN_ENTER, L"Entr", MARGIN + 4 * BUTTON_SIZE, BUTTON_SIZE * 3 + MARGIN,
+     BUTTON_SIZE, BUTTON_SIZE * 2, SPECIAL_BASE, false}};

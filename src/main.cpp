@@ -19,8 +19,8 @@
 #pragma comment(lib, "comctl32.lib")
 
 // Window dimensions
-const int MIN_WINDOW_WIDTH = 250;
-const int MIN_WINDOW_HEIGHT = 200;
+const int MIN_WINDOW_WIDTH = 210;
+const int MIN_WINDOW_HEIGHT = 210;
 
 // static void sendUnicodeKey(WORD keyCode, INPUT &ip, WPARAM wParam);
 
@@ -29,6 +29,7 @@ static bool s_repeatStarted = false;
 
 const unsigned long long ID_TIMER_BACKSPACE_DELAY = 1001;
 const unsigned long long ID_TIMER_BACKSPACE_REPEAT = 1002;
+const float ASPECT_RATIO = (float)MIN_WINDOW_WIDTH / (float)MIN_WINDOW_HEIGHT;
 
 LRESULT CALLBACK WndProc(HWND, UINT, WPARAM, LPARAM);
 void CreateButtons(HWND);
@@ -42,7 +43,8 @@ int WINAPI WinMain(HINSTANCE hInstance, HINSTANCE hPrevInstance,
   wc.lpfnWndProc = WndProc;
   wc.hInstance = hInstance;
   wc.lpszClassName = CLASS_NAME;
-  wc.hbrBackground = (HBRUSH)(COLOR_BTNFACE + 1);
+  HBRUSH backgroungBrush = CreateSolidBrush(MakeRGB(26, 26, 30));
+  wc.hbrBackground = backgroungBrush;
 
   RegisterClass(&wc);
 
@@ -89,7 +91,7 @@ void drawButton(LPDRAWITEMSTRUCT pdis) {
 
   // Draw custom border - 1 pixel wide
   HPEN hOldPen =
-      (HPEN)SelectObject(pdis->hDC, CreatePen(PS_SOLID, 1, borderLight));
+      (HPEN)SelectObject(pdis->hDC, CreatePen(PS_SOLID, 2, borderLight));
 
   // Light edges (top and left)
   MoveToEx(pdis->hDC, pdis->rcItem.left, pdis->rcItem.bottom - 2, NULL);
@@ -106,7 +108,8 @@ void drawButton(LPDRAWITEMSTRUCT pdis) {
   DeleteObject(SelectObject(pdis->hDC, hOldPen));
 
   // Draw text
-  SetTextColor(pdis->hDC, RGB(0, 0, 0));
+  COLORREF textColor = btn.isLightText ? RGB(255, 255, 255) : RGB(0, 0, 0);
+  SetTextColor(pdis->hDC, textColor);
   SetBkMode(pdis->hDC, TRANSPARENT);
   DrawText(pdis->hDC, btn.text, -1, &pdis->rcItem,
            DT_CENTER | DT_VCENTER | DT_SINGLELINE);
@@ -138,7 +141,20 @@ LRESULT CALLBACK WndProc(HWND hwnd, UINT msg, WPARAM wParam, LPARAM lParam) {
     return 0;
   }
   case WM_COMMAND: {
+    WORD id = LOWORD(wParam);
+    // if (id == IDC_BTN_BS) {
+    //   if (!s_isBackspaceHeld) {
+    //     s_isBackspaceHeld = true;
+    //     s_repeatStarted = false;
+    //
+    //     sendBackspacePress();
+    //
+    //     // Start initial delay timer
+    //     SetTimer(hwnd, ID_TIMER_BACKSPACE_DELAY, 500, NULL);
+    //   }
+    // } else {
     SendKeyPress(wParam);
+    // }
     break;
   }
   case WM_BACKSPACE_DOWN:
@@ -149,7 +165,7 @@ LRESULT CALLBACK WndProc(HWND hwnd, UINT msg, WPARAM wParam, LPARAM lParam) {
       SetTimer(hwnd, ID_TIMER_BACKSPACE_DELAY, 500, NULL);
     }
     break;
-  case WM_NCLBUTTONDOWN:
+  // case WM_NCLBUTTONDOWN:
   case WM_BACKSPACE_UP:
     if (s_isBackspaceHeld) {
       s_isBackspaceHeld = false;
@@ -165,7 +181,7 @@ LRESULT CALLBACK WndProc(HWND hwnd, UINT msg, WPARAM wParam, LPARAM lParam) {
       sendBackspacePress();
 
       KillTimer(hwnd, ID_TIMER_BACKSPACE_DELAY);
-      SetTimer(hwnd, ID_TIMER_BACKSPACE_REPEAT, 30, NULL);
+      SetTimer(hwnd, ID_TIMER_BACKSPACE_REPEAT, 40, NULL);
     } else if (wParam == ID_TIMER_BACKSPACE_REPEAT && s_isBackspaceHeld) {
       sendBackspacePress();
     }
@@ -197,6 +213,35 @@ LRESULT CALLBACK WndProc(HWND hwnd, UINT msg, WPARAM wParam, LPARAM lParam) {
       MoveWindow(hButton, newX, newY, newW, newH, TRUE);
     }
     break;
+  }
+
+  case WM_SIZING: {
+    RECT *pRect = (RECT *)lParam;
+    int width = pRect->right - pRect->left;
+    int height = pRect->bottom - pRect->top;
+
+    int expectedHeight = (int)(width / ASPECT_RATIO + 0.5f);
+    int expectedWidth = (int)(height * ASPECT_RATIO + 0.5f);
+
+    switch (wParam) {
+    case WMSZ_LEFT:
+    case WMSZ_RIGHT:
+    case WMSZ_TOPLEFT:
+    case WMSZ_TOPRIGHT:
+    case WMSZ_BOTTOMLEFT:
+    case WMSZ_BOTTOMRIGHT:
+      pRect->bottom = pRect->top + expectedHeight;
+      break;
+
+    case WMSZ_TOP:
+    case WMSZ_BOTTOM:
+      pRect->right = pRect->left + expectedWidth;
+      break;
+
+    default:
+      break;
+    }
+    return TRUE;
   }
   case WM_DESTROY:
     PostQuitMessage(0);

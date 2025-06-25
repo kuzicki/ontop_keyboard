@@ -41,8 +41,8 @@ void SendKeyPress(WPARAM wParam) {
     ip.ki.wVk = '9';
     break;
   case IDC_BTN_DOT:
-    ip.ki.wVk = VK_DECIMAL;
-    break;
+    sendUnicodeKey(0x002E, ip, wParam);
+    return;
   case IDC_BTN_PLUS:
     ip.ki.wVk = VK_ADD;
     break;
@@ -53,8 +53,8 @@ void SendKeyPress(WPARAM wParam) {
     sendUnicodeKey(0x0440, ip, wParam);
     return;
   case IDC_BTN_COMMA:
-    ip.ki.wVk = VK_OEM_COMMA;
-    break;
+    sendUnicodeKey(0x002C, ip, wParam);
+    return;
   case IDC_BTN_ENTER:
     ip.ki.wVk = VK_RETURN;
     break;
