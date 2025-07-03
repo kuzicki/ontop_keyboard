@@ -58,6 +58,12 @@ void SendKeyPress(WPARAM wParam) {
   case IDC_BTN_ENTER:
     ip.ki.wVk = VK_RETURN;
     break;
+  case IDC_BTN_TAB:
+    ip.ki.wVk = VK_TAB;
+    break;
+  case IDC_BTN_FORWARDSLASH:
+    sendUnicodeKey(0x002F, ip, wParam);
+    return;
   case IDC_BTN_BS:
     // ip.ki.wVk = VK_BACK;
     return;
