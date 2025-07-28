@@ -1,5 +1,7 @@
 #pragma once
 #include <windows.h>
 
-void SendKeyPress(WPARAM wParam);
+void sendKeyPress(WPARAM wParam);
 void sendBackspacePress();
+void sendString(const wchar_t* output);
+void setClipboardText(const wchar_t* text);

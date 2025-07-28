@@ -8,7 +8,6 @@
 #include <wingdi.h>
 #include <winuser.h>
 
-// HWND s_hClipboardLabel = nullptr;
 namespace fs = std::filesystem;
 
 static void truncate(HWND hwndLabel, std::wstring &text) {
@@ -26,7 +25,7 @@ static void truncate(HWND hwndLabel, std::wstring &text) {
 
   int maxChars = labelWidth / avgCharWidth;
   if ((int)text.length() > maxChars) {
-    text = text.substr(0, maxChars - 3) + L"..."; // add ellipsis
+    text = text.substr(0, maxChars - 3) + L"...";
   }
 }
 
@@ -36,7 +35,7 @@ std::wstring ClipboardLabel::getClipboardContent(HANDLE hData) {
     std::wstring text(pszText);
     truncate(_hwndLabel, text);
     GlobalUnlock(hData);
-    return std::move(text);
+    return text;
   }
 
   return L"<invalid content>";

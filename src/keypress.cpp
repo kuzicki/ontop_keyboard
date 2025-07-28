@@ -1,12 +1,13 @@
 #include "keypress.h"
 #include "button.h"
+#include "utils.h"
 #include <winuser.h>
 
 static void sendCopyOrPaste(INPUT &ip, WPARAM wParam);
-static void sendUnicodeKey(WORD keyCode, INPUT &ip, WPARAM wParam);
+static void sendUnicodeKey(WORD keyCode, INPUT &ip);
 
-void SendKeyPress(WPARAM wParam) {
-  INPUT ip = {0};
+void sendKeyPress(WPARAM wParam) {
+  auto ip = zero_init<INPUT>();
   ip.type = INPUT_KEYBOARD;
 
   switch (LOWORD(wParam)) {
@@ -41,7 +42,7 @@ void SendKeyPress(WPARAM wParam) {
     ip.ki.wVk = '9';
     break;
   case IDC_BTN_DOT:
-    sendUnicodeKey(0x002E, ip, wParam);
+    sendUnicodeKey(0x002E, ip);
     return;
   case IDC_BTN_PLUS:
     ip.ki.wVk = VK_ADD;
@@ -50,10 +51,10 @@ void SendKeyPress(WPARAM wParam) {
     ip.ki.wVk = VK_SUBTRACT;
     break;
   case IDC_BTN_P:
-    sendUnicodeKey(0x0440, ip, wParam);
+    sendUnicodeKey(0x0440, ip);
     return;
   case IDC_BTN_COMMA:
-    sendUnicodeKey(0x002C, ip, wParam);
+    sendUnicodeKey(0x002C, ip);
     return;
   case IDC_BTN_ENTER:
     ip.ki.wVk = VK_RETURN;
@@ -62,10 +63,9 @@ void SendKeyPress(WPARAM wParam) {
     ip.ki.wVk = VK_TAB;
     break;
   case IDC_BTN_FORWARDSLASH:
-    sendUnicodeKey(0x002F, ip, wParam);
+    sendUnicodeKey(0x002F, ip);
     return;
   case IDC_BTN_BS:
-    // ip.ki.wVk = VK_BACK;
     return;
   case IDC_BTN_COPY:
   case IDC_BTN_PASTE:
@@ -78,6 +78,28 @@ void SendKeyPress(WPARAM wParam) {
   SendInput(1, &ip, sizeof(INPUT));
   ip.ki.dwFlags = KEYEVENTF_KEYUP;
   SendInput(1, &ip, sizeof(INPUT));
+}
+
+void setClipboardText(const wchar_t *text) {
+  if (!OpenClipboard(NULL))
+    return;
+
+  EmptyClipboard();
+
+  size_t len = (wcslen(text) + 1) * sizeof(wchar_t);
+  HGLOBAL hGlobal = GlobalAlloc(GMEM_MOVEABLE, len);
+  if (!hGlobal) {
+    CloseClipboard();
+    return;
+  }
+
+  void *pGlobal = GlobalLock(hGlobal);
+  memcpy(pGlobal, text, len);
+  GlobalUnlock(hGlobal);
+
+  SetClipboardData(CF_UNICODETEXT, hGlobal);
+
+  CloseClipboard();
 }
 
 static void sendCopyOrPaste(INPUT &ip, WPARAM wParam) {
@@ -97,7 +119,7 @@ static void sendCopyOrPaste(INPUT &ip, WPARAM wParam) {
   SendInput(1, &ip, sizeof(INPUT));
 }
 
-static void sendUnicodeKey(WORD keyCode, INPUT &ip, WPARAM wParam) {
+static void sendUnicodeKey(WORD keyCode, INPUT &ip) {
   ip.ki.wScan = keyCode;
   ip.ki.dwFlags = KEYEVENTF_UNICODE;
   SendInput(1, &ip, sizeof(INPUT));
@@ -105,18 +127,36 @@ static void sendUnicodeKey(WORD keyCode, INPUT &ip, WPARAM wParam) {
   SendInput(1, &ip, sizeof(INPUT));
 }
 
-static void sendBackspacePress() {
+void sendBackspacePress() {
   INPUT inputs[2] = {};
 
-  // Key down
   inputs[0].type = INPUT_KEYBOARD;
   inputs[0].ki.wVk = VK_BACK;
   inputs[0].ki.dwFlags = 0;
 
-  // Key up
   inputs[1].type = INPUT_KEYBOARD;
   inputs[1].ki.wVk = VK_BACK;
   inputs[1].ki.dwFlags = KEYEVENTF_KEYUP;
 
   SendInput(2, inputs, sizeof(INPUT));
+}
+
+void sendString(const wchar_t *str) {
+  if (!str || !*str)
+    return;
+
+  INPUT inputs[2] = {};
+  inputs[0].type = INPUT_KEYBOARD;
+  inputs[1].type = INPUT_KEYBOARD;
+  inputs[1].ki.dwFlags = KEYEVENTF_KEYUP;
+
+  for (; *str; ++str) {
+    inputs[0].ki.wScan = *str;
+    inputs[0].ki.dwFlags = KEYEVENTF_UNICODE;
+
+    inputs[1].ki.wScan = *str;
+    inputs[1].ki.dwFlags = KEYEVENTF_UNICODE | KEYEVENTF_KEYUP;
+
+    SendInput(2, inputs, sizeof(INPUT));
+  }
 }

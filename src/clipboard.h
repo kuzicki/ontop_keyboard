@@ -19,11 +19,6 @@ private:
   HFONT _hFont = nullptr;
 };
 
-// extern HWND s_hClipboardLabel;
-//
-// void UpdateClipboardLabel(HWND hwndLabel);
-// void CreateLabel(HWND hwnd, int min_window_width);
-
 constexpr int LABEL_X = 5;
 constexpr int LABEL_Y = 5;
 constexpr int LABEL_WIDTH = 240;
