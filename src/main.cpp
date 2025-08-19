@@ -5,11 +5,12 @@
 #include "keypress.h"
 #include "popup_menu.h"
 #include "server.h"
+#include "utils.h"
+
 #include <thread>
-#include <winuser.h>
+#include <shellapi.h>
 
 #include "resources/resource.h"
-#include <shellapi.h>
 
 #define WM_TRAYICON (WM_USER + 1)
 #define ID_TRAY_EXIT 10001
@@ -80,14 +81,7 @@ int WINAPI WinMain(HINSTANCE hInstance,
                    [[maybe_unused]] HINSTANCE hPrevInstance,
                    [[maybe_unused]] LPSTR lpCmdLine, int nCmdShow) {
   g_serverThread = std::thread(serverThread);
-  // AllocConsole();
-  //
-  // FILE *fp;
-  // freopen_s(&fp, "CONOUT$", "w", stdout);
-  // freopen_s(&fp, "CONOUT$", "w", stderr);
-  // freopen_s(&fp, "CONIN$", "r", stdin);
-  //
-  // SetConsoleTitle(L"Debug Console");
+  spawn_debug_console();
 
   const wchar_t CLASS_NAME[] = L"OnTopKeyboardClass";
 

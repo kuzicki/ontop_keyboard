@@ -13,7 +13,7 @@
 Button::Button(HWND parent, int id, LPCWSTR text, int x, int y, int w, int h,
                COLORREF baseColor, bool isLightText)
     : m_id(id), m_text(text), m_x(x), m_y(y), m_w(w), m_h(h),
-      m_baseColor(baseColor), m_isLightText(isLightText) {
+      m_baseColor(baseColor), m_isLightText(isLightText), m_isPressed(false) {
   m_hWnd =
       CreateWindowW(L"BUTTON", m_text,
                     BS_OWNERDRAW | WS_TABSTOP | WS_VISIBLE | WS_CHILD |
@@ -86,7 +86,6 @@ void Button::Draw(LPDRAWITEMSTRUCT pdis) const {
 
   drawBorder(pdis->hDC, pdis->rcItem);
   drawText(pdis->hDC, pdis->rcItem);
-
   if (m_isPressed) {
     InflateRect(&pdis->rcItem, -1, -1);
     DrawEdge(pdis->hDC, &pdis->rcItem, EDGE_SUNKEN, BF_RECT);

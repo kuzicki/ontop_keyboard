@@ -47,6 +47,11 @@ target_link_options(ontop_keyboard PRIVATE "${RESOURCE_RES}")
 
 target_compile_definitions(ontop_keyboard PRIVATE UNICODE _UNICODE)
 
+target_compile_definitions(ontop_keyboard
+    PRIVATE
+        $<$<CONFIG:Debug>:DEBUG>
+)
+
 target_compile_options(ontop_keyboard PRIVATE
     -target x86_64-windows-msvc
     -fms-extensions
