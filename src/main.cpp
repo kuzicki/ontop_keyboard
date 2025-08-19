@@ -4,8 +4,8 @@
 #include "dimensions.h"
 #include "keypress.h"
 #include "popup_menu.h"
-// #include "server.h"
-// #include <thread>
+#include "server.h"
+#include <thread>
 #include <winuser.h>
 
 #include "resources/resource.h"
@@ -79,18 +79,15 @@ LRESULT CALLBACK WndProc(HWND, UINT, WPARAM, LPARAM);
 int WINAPI WinMain(HINSTANCE hInstance,
                    [[maybe_unused]] HINSTANCE hPrevInstance,
                    [[maybe_unused]] LPSTR lpCmdLine, int nCmdShow) {
-  // g_serverThread = std::thread(serverThread, []() {
-  //   MessageBoxW(nullptr, L"Hello from HTTP Server!", L"Server Message",
-  //   MB_OK);
-  // });
-  AllocConsole();
-
-  FILE *fp;
-  freopen_s(&fp, "CONOUT$", "w", stdout);
-  freopen_s(&fp, "CONOUT$", "w", stderr);
-  freopen_s(&fp, "CONIN$", "r", stdin);
-
-  SetConsoleTitle(L"Debug Console");
+  g_serverThread = std::thread(serverThread);
+  // AllocConsole();
+  //
+  // FILE *fp;
+  // freopen_s(&fp, "CONOUT$", "w", stdout);
+  // freopen_s(&fp, "CONOUT$", "w", stderr);
+  // freopen_s(&fp, "CONIN$", "r", stdin);
+  //
+  // SetConsoleTitle(L"Debug Console");
 
   const wchar_t CLASS_NAME[] = L"OnTopKeyboardClass";
 
@@ -169,7 +166,7 @@ LRESULT CALLBACK WndProc(HWND hWnd, UINT msg, WPARAM wParam, LPARAM lParam) {
     if (pdis->CtlType == ODT_MENU) {
       auto item = g_inputOptionsMenu.GetItem(pdis->itemID);
       if (item) {
-        // const UINT dpi = 96; 
+        // const UINT dpi = 96;
         // Was used for dpi scaling
         const int padding = GetSystemMetrics(SM_CXEDGE);
 
@@ -235,7 +232,7 @@ LRESULT CALLBACK WndProc(HWND hWnd, UINT msg, WPARAM wParam, LPARAM lParam) {
     case WM_RBUTTONUP: {
       POINT pt;
       GetCursorPos(&pt);
-      SetForegroundWindow(hWnd); // Required for menu to work correctly
+      SetForegroundWindow(hWnd);
       TrackPopupMenu(hTrayMenu, TPM_RIGHTBUTTON, pt.x, pt.y, 0, hWnd, nullptr);
       break;
     }
@@ -355,13 +352,13 @@ LRESULT CALLBACK WndProc(HWND hWnd, UINT msg, WPARAM wParam, LPARAM lParam) {
     break;
 
   case WM_DESTROY:
-    // g_serverRunning = false;
-    // if (g_listenSocket != INVALID_SOCKET) {
-    //   closesocket(g_listenSocket);
-    // }
-    // if (g_serverThread.joinable()) {
-    //   g_serverThread.join();
-    // }
+    g_serverRunning = false;
+    if (g_listenSocket != INVALID_SOCKET) {
+      closesocket(g_listenSocket);
+    }
+    if (g_serverThread.joinable()) {
+      g_serverThread.join();
+    }
 
     Shell_NotifyIcon(NIM_DELETE, &nid);
     if (hTrayMenu) {
